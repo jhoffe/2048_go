@@ -29,7 +29,7 @@ type Game struct {
 var rnd = rand.New(rand.NewSource(time.Now().UnixNano()))
 
 func (g *Game) AddBrick() *Game {
-	emptyCells := g.FindEmptyCells()
+	emptyCells := g.findEmptyCells()
 
 	if len(emptyCells) <= 0 {
 		g.Done = true
@@ -76,7 +76,7 @@ func (g *Game) rotateBoardN(n int, counterClockwise bool) *Game {
 	return g
 }
 
-func (g *Game) FindEmptyCells() []int {
+func (g *Game) findEmptyCells() []int {
 	var emptyCells = []int{}
 	for i, row := range g.Board {
 		for j, cell := range row {
