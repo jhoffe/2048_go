@@ -37,6 +37,44 @@ var DepthStepSize int
 
 var Result string
 
+type WaitGroupPool struct {
+	size      int
+	pool      chan byte
+	waitGroup sync.WaitGroup
+}
+
+func NewWaitGroupPool(size int) *WaitGroupPool {
+	wg := &WaitGroupPool{
+		size: size,
+	}
+
+	if size > 0 {
+		wg.pool = make(chan byte, size)
+	}
+
+	return wg
+}
+
+func (wg *WaitGroupPool) BlockAdd() {
+	if wg.size > 0 {
+		wg.pool <- 1
+	}
+
+	wg.waitGroup.Add(1)
+}
+
+func (wg *WaitGroupPool) Done() {
+	if wg.size > 0 {
+		<-wg.pool
+	}
+
+	wg.waitGroup.Add(1)
+}
+
+func (wg *WaitGroupPool) Wait() {
+	wg.waitGroup.Wait()
+}
+
 // analyzeCmd represents the analyze command
 var analyzeCmd = &cobra.Command{
 	Use:   "analyze",
@@ -61,14 +99,15 @@ to quickly create a Cobra application.`,
 		}()
 		writer.Write([]string{"N", "R", "D", "Score", "HighestBrick", "Time"})
 
-		var wg sync.WaitGroup
+		wg := NewWaitGroupPool(25)
 
 		for n := 0; n < SampleSize; n++ {
 			if Step {
 				for r := IterStepSize; r <= ItersA; r = r + IterStepSize {
 					for d := DepthStepSize; d <= DepthA; d = d + DepthStepSize {
-						wg.Add(1)
-						go func(wg *sync.WaitGroup, r, d, n int) {
+						wg.BlockAdd()
+
+						go func(wg *WaitGroupPool, r, d, n int) {
 							fmt.Printf("Beginning R=%d and D=%d and N=%d \n", r, d, n)
 							g, duration := montecarlo.Run(r, d, montecarlo.ScoreRewardFunction)
 
@@ -81,12 +120,12 @@ to quickly create a Cobra application.`,
 							mu.Unlock()
 
 							wg.Done()
-						}(&wg, r, d, n)
+						}(wg, r, d, n)
 					}
 				}
 			} else {
-				wg.Add(1)
-				go func(wg *sync.WaitGroup, r, d, n int) {
+				wg.BlockAdd()
+				go func(wg *WaitGroupPool, r, d, n int) {
 					fmt.Printf("Beginning R=%d and D=%d and N=%d \n", ItersA, DepthA, SampleSize)
 
 					g, duration := montecarlo.Run(ItersA, DepthA, montecarlo.ScoreRewardFunction)
@@ -99,7 +138,7 @@ to quickly create a Cobra application.`,
 					mu.Unlock()
 
 					wg.Done()
-				}(&wg, ItersA, DepthA, n)
+				}(wg, ItersA, DepthA, n)
 			}
 		}
 
