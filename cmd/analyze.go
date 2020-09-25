@@ -35,6 +35,8 @@ var IterStepSize int
 var DepthA int
 var DepthStepSize int
 
+var Result string
+
 // analyzeCmd represents the analyze command
 var analyzeCmd = &cobra.Command{
 	Use:   "analyze",
@@ -46,7 +48,7 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		file, err := os.Create("results.csv")
+		file, err := os.Create(Result)
 		if err != nil {
 			panic(err)
 		}
@@ -116,6 +118,8 @@ func init() {
 
 	analyzeCmd.Flags().IntVarP(&DepthA, "depth", "d", 200, "The depth of the tree to crawl. If 0, until the game is done")
 	analyzeCmd.Flags().IntVarP(&DepthStepSize, "depthsteps", "D", 1, "The step size between each run")
+
+	analyzeCmd.Flags().StringVarP(&Result, "result", "r", "results.csv", "")
 
 	// Here you will define your flags and configuration settings.
 
