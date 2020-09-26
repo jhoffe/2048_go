@@ -37,6 +37,8 @@ var DepthStepSize int
 
 var Result string
 
+var Concurrent int
+
 type WaitGroupPool struct {
 	size      int
 	pool      chan byte
@@ -99,7 +101,7 @@ to quickly create a Cobra application.`,
 		}()
 		writer.Write([]string{"N", "R", "D", "Score", "HighestBrick", "Time"})
 
-		wg := NewWaitGroupPool(25)
+		wg := NewWaitGroupPool(Concurrent)
 
 		for n := 0; n < SampleSize; n++ {
 			if Step {
@@ -159,6 +161,7 @@ func init() {
 	analyzeCmd.Flags().IntVarP(&DepthStepSize, "depthsteps", "D", 1, "The step size between each run")
 
 	analyzeCmd.Flags().StringVarP(&Result, "result", "r", "results.csv", "")
+	analyzeCmd.Flags().IntVarP(&Concurrent, "concurrent", "c", 20, "")
 
 	// Here you will define your flags and configuration settings.
 
